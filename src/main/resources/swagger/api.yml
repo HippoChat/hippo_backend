@@ -9,26 +9,502 @@ servers:
     description: Development server
   - url: https://localhost:8080/api
     description: Development server with TLS Profile
-paths: {}
-components:
-  responses:
-    Problem:
-      description: error occurred - see status code and problem object for more information.
-      content:
-        'application/problem+json':
-          schema:
-            $ref: 'https://opensource.zalando.com/problem/schema.yaml#/Problem'
+tags:
+  - name: general
+    description: General methods
+  - name: user
+    description: User-specific methods
+  - name: 'friends'
+    description: Friends and Blocked users
+  - name: chat
+    description: Messaging
+paths:
+  '/users':
+    get:
+      description: Get a list of user IDs
+      operationId: Users.Get
+      tags:
+        - general
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UsersListResponse'
+  '/user/sign_up':
+    post:
+      description: Adds a new user to the system if they don’t exist yet
+      operationId: User.SignUp.Post
+      tags:
+        - general
+      security: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserLoggedIn'
+  '/user/login':
+    post:
+      description: Logs a user into the system
+      operationId: User.Login.Post
+      tags:
+        - general
+      security: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserLoggedIn'
 
-  securitySchemes:
-    jwt:
-      type: http
-      description: JWT Authentication
-      scheme: bearer
-      bearerFormat: JWT
-    basic:
-      type: http
-      description: Basic Authentication
-      scheme: basic
-security:
-  - jwt: []
-  - basic: []
+  '/user/{id}':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      description: Get user info
+      operationId: User.Id.Get
+      tags:
+        - user
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+  '/user/{id}/logout':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Logs a user out of the system
+      operationId: User.Id.Logout.Post
+      tags:
+        - user
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/add_info':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Sends a user’s personal info for storage
+      operationId: User.Id.Info.Post
+      tags:
+        - user
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserInfoRequest'
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/add_preferences':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Sends a user’s preferences to the server
+      operationId: User.Id.Preferences.Post
+      tags:
+        - user
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UserPreferencesRequest'
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/get_partner':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      description: Tries to get a partner for a given user
+      operationId: User.Id.Partner.Get
+      tags:
+        - user
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PartnerResponse'
+
+  '/user/{id}/friends':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      description: Retrieve a list of user’s friends
+      operationId: User.Id.Friends.Get
+      tags:
+        - friends
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FriendsListResponse'
+  '/user/{id}/add_friend':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Adds a friend to a list of user’s friends, if possible
+      operationId: User.Id.Friends.Add.Post
+      tags:
+        - friends
+      requestBody:
+        $ref: '#/components/requestBodies/FriendIdRequestBody'
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/remove_friend':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Removes a friend for a list of user’s friends, if possible
+      operationId: User.Id.Friends.Remove.Post
+      tags:
+        - friends
+      requestBody:
+        $ref: '#/components/requestBodies/FriendIdRequestBody'
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/report':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Reports another user as having “bad behaviour” and adds them to the list of users blocked by the given user.
+      operationId: User.Id.Report.Post
+      tags:
+        - friends
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        default:
+          $ref: '#/components/responses/BasicResponse'
+  '/user/{id}/blocked':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      description: Returns the list of users blocked for the given user
+      operationId: User.Id.Blocked.Get
+      tags:
+        - friends
+      responses:
+        default:
+          $ref: '#/components/schemas/BlockedUsersResponse'
+
+  '/user/{id}/send_message':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Sends a message to another user.
+      operationId: User.Id.SendMessage.Post
+      tags:
+        - chat
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        default:
+          $ref: '#/components/responses/SentMessage'
+  '/user/{id}/messages/{peer_id}':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+      - name: peer_id
+        in: path
+        description: Receiver user ID
+        required: true
+        schema:
+          $ref: '#/components/schemas/UserId'
+    post:
+      description: Retrieve all chat history with peer.
+      operationId: User.Id.Messages.Post
+      tags:
+        - chat
+      responses:
+        default:
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MessagesResponse'
+components:
+  requestBodies:
+    FriendIdRequestBody:
+      description: Specifies user ID of a friend
+      required: true
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/FriendIdObject'
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      description: ID of a user
+      schema:
+        $ref: '#/components/schemas/UserId'
+  schemas:
+    UserId:
+      type: integer
+    ResponseBase:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+    UsersListResponse:
+      type: object
+      required:
+        - status
+        - user_ids
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        user_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserId'
+    UserCredentials:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    UserLoggedIn:
+      type: object
+      required:
+        - status
+        - id
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        id:
+          $ref: '#/components/schemas/UserId'
+    UserPreferencesRequest:
+      type: object
+      required:
+        - preferences
+      properties:
+        preferences:
+          type: string
+    UserInfoRequest:
+      type: object
+      required:
+        - name
+        - surname
+        - personal_info
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        personal_info:
+          type: string
+    UserInfoResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        surname:
+          type: string
+        personal_info:
+          type: string
+        preferences:
+          type: integer
+    PartnerResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        partner_id:
+          $ref: '#/components/schemas/UserId'
+
+    FriendId:
+      type: object
+      required:
+        - friend_id
+      properties:
+        friend_id:
+          $ref: '#/components/schemas/UserId'
+    FriendsListResponse:
+      type: object
+      required:
+        - status
+        - friend_ids
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        friend_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserId'
+    FriendIdObject:
+      type: object
+      required:
+        - friend_id
+      properties:
+        friend_id:
+          $ref: '#/components/schemas/UserId'
+    ReportRequest:
+      type: object
+      required:
+        - report_reason
+        - reported_id
+      properties:
+        report_reason:
+          type: integer
+        reported_id:
+          type: integer
+    BlockedUsersResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        blocked:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserId'
+
+    MessageId:
+      description: Globally unique message ID
+      type: integer
+    MessageRequest:
+      type: object
+      description: |
+        Message ID of `reply_to_message_id` must belong to the same chat.
+        At least `message` or `image` must be non-empty.
+        `image` is base64 encoded jpeg file.
+      required:
+        - receiver_id
+      properties:
+        receiver_id:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+        image:
+          type: string
+          format: byte
+        reply_to_message_id:
+          $ref: '#/components/schemas/MessageId'
+    SentMessage:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        message_id:
+          $ref: '#/components/schemas/MessageId'
+    MessagesResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        messages:
+          $ref: '#/components/schemas/Messages'
+    Messages:
+      type: array
+      items:
+        $ref: '#/components/schemas/Message'
+    Message:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/MessageId'
+        incoming:
+          type: boolean
+          description: Shortcut for comparing sender with current user's ID.
+        sender:
+          $ref: '#/components/schemas/UserId'
+        receiver:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+        image:
+          type: string
+          format: byte
+        reply_to_message_id:
+          $ref: '#/components/schemas/MessageId'
+  responses:
+    BasicResponse:
+      description: Basic response
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/ResponseBase'
+    SentMessage:
+      description: Wrapper for `SentMessage` scheme.
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/SentMessage'
+  securitySchemes: {}
+#    jwt:
+#      type: http
+#      description: JWT Authentication
+#      scheme: bearer
+#      bearerFormat: JWT
+security: []
