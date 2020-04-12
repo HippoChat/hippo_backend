@@ -18,7 +18,6 @@
     "devDatabaseType": "h2Memory",
     "prodDatabaseType": "postgresql",
     "searchEngine": false,
-    "messageBroker": "kafka",
     "serviceDiscoveryType": false,
     "buildTool": "gradle",
     "enableSwaggerCodegen": true,

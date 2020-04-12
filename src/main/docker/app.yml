@@ -12,7 +12,6 @@ services:
       # - JHIPSTER_CACHE_REDIS_SERVER=redis://backend-redis:6379
       # - JHIPSTER_CACHE_REDIS_CLUSTER=true
       - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
-      - KAFKA_BOOTSTRAPSERVERS=kafka:9092
     ports:
       - 8080:8080
   backend-postgresql:
@@ -23,14 +22,3 @@ services:
     extends:
       file: redis.yml
       service: backend-redis
-  kafka:
-    extends:
-      file: kafka.yml
-      service: kafka
-    environment:
-      - KAFKA_ADVERTISED_HOST_NAME=kafka
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-  zookeeper:
-    extends:
-      file: kafka.yml
-      service: zookeeper
