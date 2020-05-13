@@ -371,13 +371,6 @@ components:
         partner_id:
           $ref: '#/components/schemas/UserId'
 
-    FriendId:
-      type: object
-      required:
-        - friend_id
-      properties:
-        friend_id:
-          $ref: '#/components/schemas/UserId'
     BookmarksListResponse:
       type: object
       required:
