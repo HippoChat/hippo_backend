@@ -392,6 +392,7 @@ components:
       properties:
         user_id:
           $ref: '#/components/schemas/UserId'
+
     ReportRequest:
       type: object
       required:
