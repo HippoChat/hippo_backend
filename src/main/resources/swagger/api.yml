@@ -170,7 +170,7 @@ paths:
         default:
           $ref: '#/components/responses/BasicResponse'
 
-  '/report':
+  '/ban/report':
     post:
       description: Reports another user as having "bad behaviour" and adds them to the list of users blocked by the given user.
       operationId: Ban.Report
@@ -184,7 +184,7 @@ paths:
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
-  '/blocked':
+  '/ban/blocked':
     get:
       description: Get a list of users blocked by the current user.
       operationId: Ban.GetBlocked
