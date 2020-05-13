@@ -96,6 +96,17 @@ jhipster:
       cluster: false
       # server: redis://localhost:6379,redis://localhost:16379,redis://localhost:26379
       # cluster: true
+
+  # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
+  # XXX: we don't care about CORS/security for an Android app's backend for university project
+  cors:
+    allowed-origins: '*'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count'
+    allow-credentials: true
+    max-age: 1800
+
   security:
     authentication:
       jwt:
