@@ -119,8 +119,6 @@ paths:
                 $ref: '#/components/schemas/UserInfoResponse'
 
   '/user/wait_for_partner':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
     post:
       description: Wait for a match.
       operationId: User.WaitForPartner
@@ -192,7 +190,11 @@ paths:
         - ban
       responses:
         default:
-          $ref: '#/components/schemas/BlockedUsersResponse'
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BlockedUsersResponse'
 
   '/chat/send_message':
     post:
@@ -232,6 +234,8 @@ components:
   schemas:
     UserId:
       type: integer
+    BookmarkObject:
+      $ref: '#/components/schemas/UserId'
     Phone:
       type: string
       description: Phone number. Stripped from any punctuation except for leading '+'.
@@ -412,13 +416,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BookmarkObject'
-    BookmarkObject:
-      type: object
-      required:
-        - user_id
-      properties:
-        user_id:
-          $ref: '#/components/schemas/UserId'
 
     ReportRequest:
       type: object
@@ -428,8 +425,8 @@ components:
       properties:
         report_reason:
           type: integer
-        reported_id:
-          type: integer
+        reported_user:
+          $ref: '#/components/schemas/UserId'
     BlockedUsersResponse:
       type: object
       required:
@@ -540,9 +537,9 @@ components:
           schema:
             $ref: '#/components/schemas/SentMessage'
   securitySchemes:
-    bearerAuth: # arbitrary name for the security scheme
+    bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT # optional, arbitrary value for documentation purposes#    jwt:
+      bearerFormat: JWT
 security:
   - bearerAuth: []
