@@ -11,11 +11,13 @@ servers:
     description: Development server with TLS Profile
 tags:
   - name: auth
-    description: Authentication / authorization methods
+    description: Authentication / authorization
   - name: user
-    description: User-specific methods
-  - name: 'friends'
-    description: Friends and Blocked users
+    description: User-specific
+  - name: bookmark
+    description: Bookmarked dialoges
+  - name: ban
+    description: Blocking and reporting users
   - name: chat
     description: Messaging
 
@@ -50,7 +52,7 @@ paths:
               $ref: '#/components/schemas/VerifyPhoneCodeRequest'
       responses:
         default:
-          description: OK
+          $ref: '#/components/responses/BasicResponse'
         '400':
           description: Verification failed
   '/auth/sign_up':
@@ -68,112 +70,98 @@ paths:
       responses:
         default:
           $ref: '#/components/responses/SignUpResponse'
-
-  '/users':
-    get:
-      description: Get a list of user IDs
-      operationId: Users.Get
-      tags:
-        - auth
-      responses:
-        default:
-          description: OK
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/UsersListResponse'
-  '/user/{id}':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
-    get:
-      description: Get user info
-      operationId: User.GetById
-      tags:
-        - user
-      responses:
-        default:
-          description: OK
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/UserInfoResponse'
-  '/user/{id}/logout':
+  '/auth/logout':
     parameters:
       - $ref: '#/components/parameters/UserId'
     post:
       description: Logs a user out of the system
       operationId: User.Logout
       tags:
-        - user
+        - auth
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
 
-  '/user/{id}/get_partner':
+  '/user/{id}':
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
-      description: Tries to get a partner for a given user
-      operationId: User.Id.Partner.Get
+      description: Get user info by ID
+      operationId: User.GetById
       tags:
         - user
       responses:
         default:
-          description: OK
+          description: Default response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+
+  '/user/wait_for_partner':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      description: Wait for a match.
+      operationId: User.WaitForPartner
+      tags:
+        - user
+      responses:
+        default:
+          description: Default response
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PartnerResponse'
 
-  '/user/{id}/friends':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
+  '/bookmark':
     get:
-      description: Retrieve a list of user’s friends
-      operationId: User.Id.Friends.Get
+      description: Retrieve a list of user’s bookmarked dialogs
+      operationId: User.GetBookmarks
       tags:
-        - friends
+        - bookmark
       responses:
         default:
           description: OK
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/FriendsListResponse'
-  '/user/{id}/add_friend':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
+                $ref: '#/components/schemas/BookmarksListResponse'
+
     post:
-      description: Adds a friend to a list of user’s friends, if possible
-      operationId: User.Id.Friends.Add.Post
+      description: Adds a dialog with a given user to the current user’s bookmarks list.
+      operationId: User.AddBookmark
       tags:
-        - friends
+        - bookmark
       requestBody:
-        $ref: '#/components/requestBodies/FriendIdRequestBody'
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/BookmarkObject'
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
-  '/user/{id}/remove_friend':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
-    post:
-      description: Removes a friend for a list of user’s friends, if possible
-      operationId: User.Id.Friends.Remove.Post
+
+    delete:
+      description: Removes a dialog with a given user from the current user's bookmarks list.
+      operationId: User.RemoveBookmark
       tags:
-        - friends
+        - bookmark
       requestBody:
-        $ref: '#/components/requestBodies/FriendIdRequestBody'
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/BookmarkObject'
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
-  '/user/{id}/report':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
+
+  '/report':
     post:
-      description: Reports another user as having “bad behaviour” and adds them to the list of users blocked by the given user.
-      operationId: User.Id.Report.Post
+      description: Reports another user as having "bad behaviour" and adds them to the list of users blocked by the given user.
+      operationId: Ban.Report
       tags:
-        - friends
+        - ban
       requestBody:
         content:
           'application/json':
@@ -182,24 +170,20 @@ paths:
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
-  '/user/{id}/blocked':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
+  '/blocked':
     get:
-      description: Returns the list of users blocked for the given user
-      operationId: User.Id.Blocked.Get
+      description: Get a list of users blocked by the current user.
+      operationId: Ban.GetBlocked
       tags:
-        - friends
+        - ban
       responses:
         default:
           $ref: '#/components/schemas/BlockedUsersResponse'
 
-  '/user/{id}/send_message':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
+  '/chat/send_message':
     post:
       description: Sends a message to another user.
-      operationId: User.Id.SendMessage.Post
+      operationId: Chat.SendMessage
       tags:
         - chat
       requestBody:
@@ -207,40 +191,22 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/MessageRequest'
+              $ref: '#/components/schemas/SendMessageRequest'
       responses:
         default:
           $ref: '#/components/responses/SentMessage'
-  '/user/{id}/messages/{peer_id}':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
-      - name: peer_id
-        in: path
-        description: Receiver user ID
-        required: true
-        schema:
-          $ref: '#/components/schemas/UserId'
+  '/chat/messages':
     post:
-      description: Retrieve all chat history with peer.
-      operationId: User.Id.Messages.Post
+      description: Poll for new messages in all chats. This may be a form of long polling.
+      operationId: Chat.PollMessages
       tags:
         - chat
       responses:
         default:
-          description: OK
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/MessagesResponse'
+          $ref: '#/components/schemas/MessagesResponse'
+
 components:
-  requestBodies:
-    FriendIdRequestBody:
-      description: Specifies user ID of a friend
-      required: true
-      content:
-        'application/json':
-          schema:
-            $ref: '#/components/schemas/FriendIdObject'
+  requestBodies: {}
   parameters:
     UserId:
       name: id
@@ -418,26 +384,26 @@ components:
       properties:
         friend_id:
           $ref: '#/components/schemas/UserId'
-    FriendsListResponse:
+    BookmarksListResponse:
       type: object
       required:
         - status
-        - friend_ids
+        - bookmarks
       properties:
         status:
           type: integer
         error_message:
           type: string
-        friend_ids:
+        bookmarks:
           type: array
           items:
-            $ref: '#/components/schemas/UserId'
-    FriendIdObject:
+            $ref: '#/components/schemas/BookmarkObject'
+    BookmarkObject:
       type: object
       required:
-        - friend_id
+        - user_id
       properties:
-        friend_id:
+        user_id:
           $ref: '#/components/schemas/UserId'
     ReportRequest:
       type: object
@@ -466,7 +432,7 @@ components:
     MessageId:
       description: Globally unique message ID
       type: integer
-    MessageRequest:
+    SendMessageRequest:
       type: object
       description: |
         Message ID of `reply_to_message_id` must belong to the same chat.
@@ -536,14 +502,12 @@ components:
         'application/json':
           schema:
             $ref: '#/components/schemas/ResponseBase'
-
     SignUpResponse:
       description: User registered and automatically logged in
       content:
         'application/json':
           schema:
             $ref: '#/components/schemas/SignUpResponse'
-
     SentMessage:
       description: Wrapper for `SentMessage` scheme.
       content:
