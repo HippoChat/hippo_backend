@@ -10,21 +10,75 @@ servers:
   - url: https://localhost:8080/api
     description: Development server with TLS Profile
 tags:
-  - name: general
-    description: General methods
+  - name: auth
+    description: Authentication / authorization methods
   - name: user
     description: User-specific methods
   - name: 'friends'
     description: Friends and Blocked users
   - name: chat
     description: Messaging
+
 paths:
+  '/auth/send_verification_code':
+    post:
+      description: Send SMS with verification code
+      operationId: Auth.SendVerificationCode
+      tags:
+        - auth
+      security: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/VerificationCodeRequest'
+      responses:
+        default:
+          description: OK
+          content: {} # no body
+  '/auth/verify_phone_code':
+    post:
+      description: Verify the code sent via SMS
+      operationId: Auth.VerifyPhoneCode
+      tags:
+        - auth
+      security: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/VerifyPhoneCodeRequest'
+      responses:
+        default:
+          description: OK
+        '400':
+          description: Verification failed
+  '/auth/sign_up':
+    post:
+      description: Adds a new user to the system if they don’t exist yet
+      operationId: Auth.SignUp
+      tags:
+        - auth
+      security: []
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        default:
+          description: User registered and automatically logged in
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UserLoggedIn'
+
   '/users':
     get:
       description: Get a list of user IDs
       operationId: Users.Get
       tags:
-        - general
+        - auth
       responses:
         default:
           description: OK
@@ -32,45 +86,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/UsersListResponse'
-  '/user/sign_up':
-    post:
-      description: Adds a new user to the system if they don’t exist yet
-      operationId: User.SignUp.Post
-      tags:
-        - general
-      security: []
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/UserCredentials'
-      responses:
-        default:
-          description: OK
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/UserLoggedIn'
-  '/user/login':
-    post:
-      description: Logs a user into the system
-      operationId: User.Login.Post
-      tags:
-        - general
-      security: []
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/UserCredentials'
-      responses:
-        default:
-          description: OK
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/UserLoggedIn'
-
   '/user/{id}':
     parameters:
       - $ref: '#/components/parameters/UserId'
@@ -111,23 +126,6 @@ paths:
           'application/json':
             schema:
               $ref: '#/components/schemas/UserInfoRequest'
-      responses:
-        default:
-          $ref: '#/components/responses/BasicResponse'
-  '/user/{id}/add_preferences':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
-    post:
-      description: Sends a user’s preferences to the server
-      operationId: User.Id.Preferences.Post
-      tags:
-        - user
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/UserPreferencesRequest'
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
@@ -274,6 +272,31 @@ components:
   schemas:
     UserId:
       type: integer
+    Phone:
+      type: string
+      description: Phone number. Stripped from any punctuation except for leading '+'.
+      pattern: '\+[0-9]{7,20}'
+    VerificationCode:
+      type: string
+      description: Verification code from SMS. 4-digits string.
+      pattern: '[0-9]{4}'
+    AgeGroup:
+      type: string
+      enum:
+        - '<18'
+        - '18-25'
+        - '26-35'
+        - '36-45'
+        - '>45'
+    LanguageSpec:
+      type: string
+      description: https://docs.oracle.com/javase/tutorial/i18n/locale/matching.html
+      enum:
+        - 'en-US'
+        - 'ru-RU'
+        - 'fr-FR'
+        - 'it-IT'
+        - 'es-ES'
     ResponseBase:
       type: object
       required:
@@ -283,6 +306,56 @@ components:
           type: integer
         error_message:
           type: string
+
+    VerificationCodeRequest:
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+      required:
+        - phone
+    VerifyPhoneCodeRequest:
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+        code:
+          $ref: '#/components/schemas/VerificationCode'
+      required:
+        - phone
+        - code
+    SignUpRequest:
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+        code:
+          $ref: '#/components/schemas/VerificationCode'
+        name:
+          type: string
+        age_group:
+          $ref: '#/components/schemas/AgeGroup'
+        language:
+          $ref: '#/components/schemas/LanguageSpec'
+      required:
+        - phone
+        - code
+        - name
+        - age_group
+        - language
+    UserLoggedIn:
+      type: object
+      required:
+        - status
+        - id
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        id:
+          $ref: '#/components/schemas/UserId'
+
     UsersListResponse:
       type: object
       required:
@@ -297,35 +370,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserId'
-    UserCredentials:
-      type: object
-      required:
-        - email
-        - password
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    UserLoggedIn:
-      type: object
-      required:
-        - status
-        - id
-      properties:
-        status:
-          type: integer
-        error_message:
-          type: string
-        id:
-          $ref: '#/components/schemas/UserId'
-    UserPreferencesRequest:
-      type: object
-      required:
-        - preferences
-      properties:
-        preferences:
-          type: string
     UserInfoRequest:
       type: object
       required:
