@@ -128,16 +128,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookmarksListResponse'
 
+  '/bookmark/{id}':
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+
     post:
       description: Adds a dialog with a given user to the current user’s bookmarks list.
       operationId: User.AddBookmark
       tags:
         - bookmark
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/BookmarkObject'
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
@@ -147,11 +146,6 @@ paths:
       operationId: User.RemoveBookmark
       tags:
         - bookmark
-      requestBody:
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/BookmarkObject'
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
