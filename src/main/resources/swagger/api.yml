@@ -82,6 +82,26 @@ paths:
         default:
           $ref: '#/components/responses/BasicResponse'
 
+  '/user/set_image':
+    post:
+      description: Set profile image
+      operationId: User.SetProfileImage
+      tags:
+        - user
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                image:
+                  $ref: '#/components/schemas/Image'
+              required:
+                - image
+      responses:
+        default:
+          $ref: '#/components/responses/SignUpResponse'
   '/user/{id}':
     parameters:
       - $ref: '#/components/parameters/UserId'
@@ -246,6 +266,10 @@ components:
           type: integer
         error_message:
           type: string
+    Image:
+      description: Base64 encoded JPEG image
+      type: string
+      format: byte
 
     UserIdList:
       type: array
@@ -262,11 +286,14 @@ components:
           $ref: '#/components/schemas/AgeGroup'
         language:
           $ref: '#/components/schemas/LanguageSpec'
+        image:
+          $ref: '#/components/schemas/Image'
       required:
         - id
         - name
         - age_group
         - language
+        - image
     UserInfoSelf:
       type: object
       properties:
@@ -483,8 +510,7 @@ components:
         message:
           type: string
         image:
-          type: string
-          format: byte
+          $ref: '#/components/schemas/Image'
         reply_to_message_id:
           $ref: '#/components/schemas/MessageId'
       required:
