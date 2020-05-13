@@ -67,11 +67,7 @@ paths:
               $ref: '#/components/schemas/SignUpRequest'
       responses:
         default:
-          description: User registered and automatically logged in
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/UserLoggedIn'
+          $ref: '#/components/responses/SignUpResponse'
 
   '/users':
     get:
@@ -91,7 +87,7 @@ paths:
       - $ref: '#/components/parameters/UserId'
     get:
       description: Get user info
-      operationId: User.Id.Get
+      operationId: User.GetById
       tags:
         - user
       responses:
@@ -106,29 +102,13 @@ paths:
       - $ref: '#/components/parameters/UserId'
     post:
       description: Logs a user out of the system
-      operationId: User.Id.Logout.Post
+      operationId: User.Logout
       tags:
         - user
       responses:
         default:
           $ref: '#/components/responses/BasicResponse'
-  '/user/{id}/add_info':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
-    post:
-      description: Sends a user’s personal info for storage
-      operationId: User.Id.Info.Post
-      tags:
-        - user
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/UserInfoRequest'
-      responses:
-        default:
-          $ref: '#/components/responses/BasicResponse'
+
   '/user/{id}/get_partner':
     parameters:
       - $ref: '#/components/parameters/UserId'
@@ -307,6 +287,46 @@ components:
         error_message:
           type: string
 
+    UserIdList:
+      type: array
+      items:
+        $ref: '#/components/schemas/UserId'
+    UserInfo:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        name:
+          type: string
+        age_group:
+          $ref: '#/components/schemas/AgeGroup'
+        language:
+          $ref: '#/components/schemas/LanguageSpec'
+      required:
+        - id
+        - name
+        - age_group
+        - language
+    UserInfoSelf:
+      type: object
+      properties:
+        public:
+          $ref: '#/components/schemas/UserInfo'
+        private:
+          type: object
+          properties:
+            phone:
+              $ref: '#/components/schemas/Phone'
+            token:
+              description: Authentication token
+              type: string
+          required:
+            - prone
+            - token
+      required:
+        - public
+        - private
+
     VerificationCodeRequest:
       type: object
       properties:
@@ -324,6 +344,7 @@ components:
       required:
         - phone
         - code
+
     SignUpRequest:
       type: object
       properties:
@@ -343,46 +364,29 @@ components:
         - name
         - age_group
         - language
-    UserLoggedIn:
+    SignUpResponse:
       type: object
       required:
         - status
-        - id
       properties:
         status:
           type: integer
         error_message:
           type: string
-        id:
-          $ref: '#/components/schemas/UserId'
+        me:
+          $ref: '#/components/schemas/UserInfoSelf'
 
     UsersListResponse:
       type: object
       required:
         - status
-        - user_ids
       properties:
         status:
           type: integer
         error_message:
           type: string
         user_ids:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserId'
-    UserInfoRequest:
-      type: object
-      required:
-        - name
-        - surname
-        - personal_info
-      properties:
-        name:
-          type: string
-        surname:
-          type: string
-        personal_info:
-          type: string
+          $ref: '#/components/schemas/UserIdList'
     UserInfoResponse:
       type: object
       required:
@@ -392,16 +396,9 @@ components:
           type: integer
         error_message:
           type: string
-        email:
-          type: string
-        name:
-          type: string
-        surname:
-          type: string
-        personal_info:
-          type: string
-        preferences:
-          type: integer
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
     PartnerResponse:
       type: object
       required:
@@ -539,16 +536,24 @@ components:
         'application/json':
           schema:
             $ref: '#/components/schemas/ResponseBase'
+
+    SignUpResponse:
+      description: User registered and automatically logged in
+      content:
+        'application/json':
+          schema:
+            $ref: '#/components/schemas/SignUpResponse'
+
     SentMessage:
       description: Wrapper for `SentMessage` scheme.
       content:
         'application/json':
           schema:
             $ref: '#/components/schemas/SentMessage'
-  securitySchemes: {}
-#    jwt:
-#      type: http
-#      description: JWT Authentication
-#      scheme: bearer
-#      bearerFormat: JWT
-security: []
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes#    jwt:
+security:
+  - bearerAuth: []
