@@ -82,10 +82,14 @@ paths:
         default:
           $ref: '#/components/responses/BasicResponse'
 
-  '/user/set_image':
+  '/user/set_info':
     post:
-      description: Set profile image
-      operationId: User.SetProfileImage
+      summary: Set users' info such as name, language, profile image etc.
+      description: |
+        Set all fields to the current values, except for the overriden ones.
+        No field should be missing. User ID must always be the ID of the
+        current user.
+      operationId: User.SetInfo
       tags:
         - user
       requestBody:
@@ -93,12 +97,7 @@ paths:
         content:
           'application/json':
             schema:
-              type: object
-              properties:
-                image:
-                  $ref: '#/components/schemas/Image'
-              required:
-                - image
+              $ref: '#/components/schemas/UserInfo'
       responses:
         default:
           $ref: '#/components/responses/SignUpResponse'
