@@ -218,7 +218,11 @@ paths:
         - chat
       responses:
         default:
-          $ref: '#/components/schemas/MessagesResponse'
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MessagesResponse'
 
 components:
   requestBodies: {}
