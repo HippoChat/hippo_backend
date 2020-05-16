@@ -102,3 +102,7 @@ def user_logout():  # noqa: E501
 
     print(f"User logged out: #{user.id} @{user.name}")
     return jsonify({"msg": "Logged out"}), 200
+
+
+def check_bearer_auth(token):
+    return {}
