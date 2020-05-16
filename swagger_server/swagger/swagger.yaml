@@ -1,0 +1,694 @@
+openapi: 3.0.1
+info:
+  title: backend
+  version: 0.0.1
+servers:
+- url: http://localhost:8080/api
+  description: Development server
+- url: https://localhost:8080/api
+  description: Development server with TLS Profile
+security:
+- bearerAuth: []
+tags:
+- name: auth
+  description: Authentication / authorization
+- name: user
+  description: User-specific
+- name: bookmark
+  description: Bookmarked dialoges
+- name: ban
+  description: Blocking and reporting users
+- name: chat
+  description: Messaging
+paths:
+  /auth/send_verification_code:
+    post:
+      tags:
+      - auth
+      description: Send SMS with verification code
+      operationId: auth_send_verification_code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationCodeRequest'
+      responses:
+        default:
+          description: OK
+          content: {}
+      security: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+  /auth/verify_phone_code:
+    post:
+      tags:
+      - auth
+      description: Verify the code sent via SMS
+      operationId: auth_verify_phone_code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPhoneCodeRequest'
+      responses:
+        "400":
+          description: Verification failed
+        default:
+          description: Basic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseBase'
+      security: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+  /auth/sign_up:
+    post:
+      tags:
+      - auth
+      description: Adds a new user to the system if they don’t exist yet
+      operationId: auth_sign_up
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        default:
+          description: User registered and automatically logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignUpResponse'
+      security: []
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+  /auth/logout:
+    post:
+      tags:
+      - auth
+      description: Logs a user out of the system
+      operationId: user_logout
+      responses:
+        default:
+          description: Basic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseBase'
+      x-openapi-router-controller: swagger_server.controllers.auth_controller
+  /user/set_info:
+    post:
+      tags:
+      - user
+      summary: Set users' info such as name, language, profile image etc.
+      description: |
+        Set all fields to the current values, except for the overriden ones.
+        No field should be missing. User ID must always be the ID of the
+        current user.
+      operationId: user_set_info
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+        required: true
+      responses:
+        default:
+          description: User registered and automatically logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignUpResponse'
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+  /user/{id}:
+    get:
+      tags:
+      - user
+      description: Get user info by ID
+      operationId: user_get_by_id
+      parameters:
+      - name: id
+        in: path
+        description: ID of a user
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/UserId'
+      responses:
+        default:
+          description: Default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoResponse'
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+  /user/wait_for_partner:
+    post:
+      tags:
+      - user
+      description: Wait for a match.
+      operationId: user_wait_for_partner
+      responses:
+        default:
+          description: Default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerResponse'
+      x-openapi-router-controller: swagger_server.controllers.user_controller
+  /bookmark:
+    get:
+      tags:
+      - bookmark
+      description: Retrieve a list of user’s bookmarked dialogs
+      operationId: user_get_bookmarks
+      responses:
+        default:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarksListResponse'
+      x-openapi-router-controller: swagger_server.controllers.bookmark_controller
+  /bookmark/{id}:
+    post:
+      tags:
+      - bookmark
+      description: Adds a dialog with a given user to the current user’s bookmarks
+        list.
+      operationId: user_add_bookmark
+      parameters:
+      - name: id
+        in: path
+        description: ID of a user
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/UserId'
+      responses:
+        default:
+          description: Basic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseBase'
+      x-openapi-router-controller: swagger_server.controllers.bookmark_controller
+    delete:
+      tags:
+      - bookmark
+      description: Removes a dialog with a given user from the current user's bookmarks
+        list.
+      operationId: user_remove_bookmark
+      parameters:
+      - name: id
+        in: path
+        description: ID of a user
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/UserId'
+      responses:
+        default:
+          description: Basic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseBase'
+      x-openapi-router-controller: swagger_server.controllers.bookmark_controller
+  /ban/report:
+    post:
+      tags:
+      - ban
+      description: Reports another user as having "bad behaviour" and adds them to
+        the list of users blocked by the given user.
+      operationId: ban_report
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRequest'
+      responses:
+        default:
+          description: Basic response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseBase'
+      x-openapi-router-controller: swagger_server.controllers.ban_controller
+  /ban/blocked:
+    get:
+      tags:
+      - ban
+      description: Get a list of users blocked by the current user.
+      operationId: ban_get_blocked
+      responses:
+        default:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockedUsersResponse'
+      x-openapi-router-controller: swagger_server.controllers.ban_controller
+  /chat/send_message:
+    post:
+      tags:
+      - chat
+      description: Sends a message to another user.
+      operationId: chat_send_message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+        required: true
+      responses:
+        default:
+          description: Wrapper for `SentMessage` scheme.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SentMessage'
+      x-openapi-router-controller: swagger_server.controllers.chat_controller
+  /chat/messages:
+    post:
+      tags:
+      - chat
+      description: Poll for new messages in all chats. This may be a form of long
+        polling.
+      operationId: chat_poll_messages
+      responses:
+        default:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesResponse'
+      x-openapi-router-controller: swagger_server.controllers.chat_controller
+components:
+  schemas:
+    UserId:
+      type: integer
+    BookmarkObject:
+      $ref: '#/components/schemas/UserId'
+    Phone:
+      pattern: \+[0-9]{7,20}
+      type: string
+      description: Phone number. Stripped from any punctuation except for leading
+        '+'.
+    VerificationCode:
+      pattern: '[0-9]{4}'
+      type: string
+      description: Verification code from SMS. 4-digits string.
+    AgeGroup:
+      type: string
+      enum:
+      - <18
+      - 18-25
+      - 26-35
+      - 36-45
+      - '>45'
+    LanguageSpec:
+      type: string
+      description: https://docs.oracle.com/javase/tutorial/i18n/locale/matching.html
+      enum:
+      - en-US
+      - ru-RU
+      - fr-FR
+      - it-IT
+      - es-ES
+    ResponseBase:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+      example:
+        error_message: error_message
+        status: 0
+    Image:
+      type: string
+      description: Base64 encoded JPEG image
+      format: byte
+    UserIdList:
+      type: array
+      items:
+        $ref: '#/components/schemas/UserId'
+    UserInfo:
+      required:
+      - age_group
+      - id
+      - image
+      - language
+      - name
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        name:
+          type: string
+        age_group:
+          $ref: '#/components/schemas/AgeGroup'
+        language:
+          $ref: '#/components/schemas/LanguageSpec'
+        image:
+          $ref: '#/components/schemas/Image'
+      example:
+        image: ""
+        age_group: <18
+        name: name
+        language: en-US
+        id: 6
+    UserInfoSelf:
+      required:
+      - private
+      - public
+      type: object
+      properties:
+        public:
+          $ref: '#/components/schemas/UserInfo'
+        private:
+          $ref: '#/components/schemas/UserInfoSelf_private'
+      example:
+        private:
+          phone: phone
+          token: token
+        public:
+          image: ""
+          age_group: <18
+          name: name
+          language: en-US
+          id: 6
+    VerificationCodeRequest:
+      required:
+      - phone
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+    VerifyPhoneCodeRequest:
+      required:
+      - code
+      - phone
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+        code:
+          $ref: '#/components/schemas/VerificationCode'
+    SignUpRequest:
+      required:
+      - age_group
+      - code
+      - language
+      - name
+      - phone
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+        code:
+          $ref: '#/components/schemas/VerificationCode'
+        name:
+          type: string
+        age_group:
+          $ref: '#/components/schemas/AgeGroup'
+        language:
+          $ref: '#/components/schemas/LanguageSpec'
+    SignUpResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        me:
+          $ref: '#/components/schemas/UserInfoSelf'
+      example:
+        error_message: error_message
+        me:
+          private:
+            phone: phone
+            token: token
+          public:
+            image: ""
+            age_group: <18
+            name: name
+            language: en-US
+            id: 6
+        status: 0
+    UsersListResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        user_ids:
+          $ref: '#/components/schemas/UserIdList'
+    UserInfoResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserInfo'
+      example:
+        error_message: error_message
+        user:
+          image: ""
+          age_group: <18
+          name: name
+          language: en-US
+          id: 6
+        status: 0
+    PartnerResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        partner_id:
+          $ref: '#/components/schemas/UserId'
+      example:
+        error_message: error_message
+        partner_id: 6
+        status: 0
+    BookmarksListResponse:
+      required:
+      - bookmarks
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        bookmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookmarkObject'
+      example:
+        error_message: error_message
+        bookmarks:
+        - 6
+        - 6
+        status: 0
+    ReportRequest:
+      required:
+      - report_reason
+      - reported_user
+      type: object
+      properties:
+        report_reason:
+          type: integer
+        reported_user:
+          $ref: '#/components/schemas/UserId'
+    BlockedUsersResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        blocked:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserId'
+      example:
+        error_message: error_message
+        blocked:
+        - 6
+        - 6
+        status: 0
+    MessageId:
+      type: integer
+      description: Globally unique message ID
+    SendMessageRequest:
+      required:
+      - receiver_id
+      type: object
+      properties:
+        receiver_id:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+        image:
+          type: string
+          format: byte
+        reply_to_message_id:
+          $ref: '#/components/schemas/MessageId'
+      description: |
+        Message ID of `reply_to_message_id` must belong to the same chat.
+        At least `message` or `image` must be non-empty.
+        `image` is base64 encoded jpeg file.
+    SentMessage:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        message_id:
+          $ref: '#/components/schemas/MessageId'
+      example:
+        error_message: error_message
+        message_id: 6
+        status: 0
+    MessagesResponse:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error_message:
+          type: string
+        messages:
+          $ref: '#/components/schemas/Messages'
+      example:
+        error_message: error_message
+        messages:
+        - incoming: true
+          image: ""
+          sender: 1
+          id: 6
+          message: message
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        - incoming: true
+          image: ""
+          sender: 1
+          id: 6
+          message: message
+          timestamp: 2000-01-23T04:56:07.000+00:00
+        status: 0
+    Messages:
+      type: array
+      description: List of messages. Do NOT assume they come from the same chat or
+        have specific ordering.
+      items:
+        $ref: '#/components/schemas/Message'
+    Message:
+      required:
+      - id
+      - message
+      - receiver
+      - sender
+      - timestamp
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/MessageId'
+        timestamp:
+          type: string
+          format: date-time
+        incoming:
+          type: boolean
+          description: Shortcut for comparing sender with current user's ID.
+        sender:
+          $ref: '#/components/schemas/UserId'
+        receiver:
+          $ref: '#/components/schemas/UserId'
+        message:
+          type: string
+        image:
+          $ref: '#/components/schemas/Image'
+        reply_to_message_id:
+          $ref: '#/components/schemas/MessageId'
+      example:
+        incoming: true
+        image: ""
+        sender: 1
+        id: 6
+        message: message
+        timestamp: 2000-01-23T04:56:07.000+00:00
+    UserInfoSelf_private:
+      required:
+      - phone
+      - token
+      type: object
+      properties:
+        phone:
+          $ref: '#/components/schemas/Phone'
+        token:
+          type: string
+          description: Authentication token
+      example:
+        phone: phone
+        token: token
+  responses:
+    BasicResponse:
+      description: Basic response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseBase'
+    SignUpResponse:
+      description: User registered and automatically logged in
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SignUpResponse'
+    SentMessage:
+      description: Wrapper for `SentMessage` scheme.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SentMessage'
+  parameters:
+    UserId:
+      name: id
+      in: path
+      description: ID of a user
+      required: true
+      style: simple
+      explode: false
+      schema:
+        $ref: '#/components/schemas/UserId'
+  requestBodies: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: swagger_server.controllers.authorization_controller.check_bearerAuth
+
