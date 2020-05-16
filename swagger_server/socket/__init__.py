@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from flask import request
@@ -6,7 +7,7 @@ from flask_jwt_extended import decode_token
 import flask_socketio
 
 from swagger_server import app, socketio
-from swagger_server.models import UserId
+from swagger_server.models import Message, MessagesResponse, SendMessageRequest, UserId
 from swagger_server.service import facebook
 
 
@@ -21,11 +22,11 @@ class OnlineUsersManager:
     def __init__(self) -> None:
         super().__init__()
 
-        self.__users_online: List[OnlineUser] = []
+        # self.__users_online: List[OnlineUser] = []
+        self.__by_sid: Dict[str, OnlineUser] = {}
 
     def connect(self, user: OnlineUser) -> None:
-        self.disconnect(user.user_id)
-        self.__users_online.append(user)
+        self.__by_sid[user.sid] = user
 
     def connect_by_sid(self, jwt: str, sid=None) -> OnlineUser:
         if sid is None:
@@ -46,53 +47,76 @@ class OnlineUsersManager:
         return online_user
 
     def disconnect(self, user_id: UserId) -> None:
-        for user in self.__users_online:
-            if user.user_id == user_id:
-                flask_socketio.disconnect(sid=user.sid)
+        print("not disconnecting by user id")
+        pass
+        # for user in self.__users_online:
+        #     if user.user_id == user_id:
+        #         flask_socketio.disconnect(sid=user.sid)
+        #         self.__users_online.remove(user)
 
     def disconnect_by_sid(self, sid=None) -> None:
         if sid is None:
             sid = request.sid
 
-        to_remove = []
-        for user in self.__users_online:
-            if user.sid == sid:
-                to_remove.append(user)
-        for user in to_remove:
-            self.__users_online.remove(user)
+        user = self.__by_sid.pop(sid)
+        if user is not None:
             flask_socketio.disconnect(sid=user.sid)
 
-    def get(self, user_id: UserId) -> Optional[OnlineUser]:
-        for user in self.__users_online:
-            if user.user_id == user_id:
-                return user
+    def get_all(self, user_id: UserId) -> List[OnlineUser]:
+        return [
+            user
+            for user in self.__by_sid.values()
+            if user.user_id == user_id
+        ]
 
     def get_by_sid(self, sid=None) -> Optional[OnlineUser]:
         if sid is None:
             sid = request.sid
 
-        for user in self.__users_online:
-            if user.sid == sid:
-                return user
+        print("all users online: ", self.__by_sid)
+
+        return self.__by_sid.get(sid)
 
 
 manager = OnlineUsersManager()
 
 
-@socketio.on('my event')
-def handle_my_custom_event(json):
-    print('received my event: ' + str(json))
-    socketio.emit('my response', json)
-
-
-@socketio.on('my auth')
+@socketio.on('doAuth')
 def handle_connect(json):
     jwt = json['token']
     user = manager.connect_by_sid(jwt)
-    print("User connected", user)
+    app.logger.error("User authenticated: %s", user)
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    manager.disconnect_by_sid()
-    print("disconnected")
+    # manager.disconnect_by_sid()
+    app.logger.error("disconnected sid: %s", request.sid)
+
+
+@socketio.on('sendMessage')
+def handle_message(json):
+    user = manager.get_by_sid()
+    if user is None:
+        app.logger.error("Not authenticated sid: %s", request.sid)
+        flask_socketio.disconnect()
+
+    app.logger.error("message json: %s", json)
+    body = SendMessageRequest.from_dict(json)
+    recv_user = manager.get_all(body.receiver_id)
+    if len(recv_user) == 0:
+        return
+
+    message = Message(
+        id=123,
+        timestamp=datetime.now(),
+        incoming=True,
+        sender=user.user_id,
+        receiver=recv_user[0].user_id,
+        message=body.message,
+        image="",
+        reply_to_message_id=None,
+    ).to_dict()
+    rooms = [u.sid for u in recv_user]
+    for room in rooms:
+        socketio.emit('newMessage', message, room=room, json=True)

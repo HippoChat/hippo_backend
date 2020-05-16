@@ -1,6 +1,7 @@
 import pprint
 
 import typing
+from datetime import datetime
 
 from swagger_server import util
 
@@ -42,6 +43,8 @@ class Model(object):
                     k: self.__to_dict_or_id(v)
                     for (k, v) in value.items()
                 }
+            elif isinstance(value, datetime):
+                result[attr] = value.isoformat()
             else:
                 result[attr] = value
 
@@ -70,5 +73,7 @@ class Model(object):
     def __to_dict_or_id(v) -> object:
         if callable(getattr(v, "to_dict")):
             return v.to_dict()
+        elif isinstance(v, datetime):
+            return v.isoformat()
         else:
             return v
