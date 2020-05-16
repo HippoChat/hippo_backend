@@ -1,5 +1,4 @@
 import connexion
-import six
 
 from swagger_server.models.bookmarks_list_response import BookmarksListResponse  # noqa: E501
 from swagger_server.models.response_base import ResponseBase  # noqa: E501

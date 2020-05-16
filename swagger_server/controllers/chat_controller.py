@@ -1,5 +1,4 @@
 import connexion
-import six
 
 from swagger_server.models.messages_response import MessagesResponse  # noqa: E501
 from swagger_server.models.send_message_request import SendMessageRequest  # noqa: E501
