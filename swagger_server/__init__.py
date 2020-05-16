@@ -42,7 +42,7 @@ jwt = JWTManager(app)
 """
 Global JWT manager instance.
 """
-app.config['JWT_SECRET_KEY'] = 'super-secret' + random_str(32)
+app.config['JWT_SECRET_KEY'] = 'super-secret'
 
 
 # SocketIO
