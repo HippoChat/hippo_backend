@@ -4,9 +4,11 @@ import random
 import connexion
 import flask
 from flask_jwt_extended import JWTManager
+from flask import render_template
 from flask_socketio import SocketIO
 
 from swagger_server import encoder
+import pathlib
 
 
 def random_str(length: int) -> str:
@@ -15,8 +17,13 @@ def random_str(length: int) -> str:
     return string
 
 
+server_args = {
+    'static_url_path': str(pathlib.Path('.').joinpath('static').absolute()),
+}
+
+print(server_args)
 # Setup Connexion + Flask application
-conn = connexion.App(__name__, specification_dir='./swagger/')
+conn = connexion.App(__name__, specification_dir='./swagger/', server_args=server_args)
 """
 Global connexion application instance.
 """
@@ -43,3 +50,10 @@ socketio = SocketIO(app)
 """
 Global SocketIO instance.
 """
+
+import swagger_server.socket
+
+
+@app.route('/session')
+def hello_world():
+    return app.send_static_file("session.html")

@@ -58,7 +58,7 @@ def save_user(user: User) -> None:
 
 
 def generate_credentials(user: User) -> UserCredentials:
-    access_token = create_access_token(identity=user.id, expires_delta=None)
+    access_token = create_access_token(identity=user.id, expires_delta=False)
     return UserCredentials(id=user.id, token=access_token)
 
 
