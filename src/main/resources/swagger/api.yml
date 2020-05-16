@@ -71,8 +71,6 @@ paths:
         default:
           $ref: '#/components/responses/SignUpResponse'
   '/auth/logout':
-    parameters:
-      - $ref: '#/components/parameters/UserId'
     post:
       description: Logs a user out of the system
       operationId: User.Logout
@@ -315,7 +313,7 @@ components:
               description: Authentication token
               type: string
           required:
-            - prone
+            - phone
             - token
       required:
         - public
@@ -424,7 +422,7 @@ components:
       type: object
       required:
         - report_reason
-        - reported_id
+        - reported_user
       properties:
         report_reason:
           type: integer
