@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
-)
+import flask
+from flask_jwt_extended import JWTManager
 import connexion
+import swagger_server as this
 
 from swagger_server import encoder
+
+
+def random_str(length: int) -> str:
+    import random
+    import base64
+
+    array = bytes(random.randint(0, 255) for _ in range(length))
+    string = base64.b64encode(array).decode('utf8')
+    return string
 
 
 def main():
@@ -14,8 +22,12 @@ def main():
     app.add_api('swagger.yaml', arguments={'title': 'backend'}, pythonic_params=True)
 
     # Setup the Flask-JWT-Extended extension
-    app.app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
-    jwt = JWTManager(app.app)
+    app.app.config['JWT_SECRET_KEY'] = 'super-secret' + random_str(32)  # Change this!
+
+    this.__app = app.app
+    this.__connexion = app
+    this.__jwt = JWTManager(app.app)
+
     app.run(port=8080)
 
 

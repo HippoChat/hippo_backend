@@ -44,17 +44,13 @@ def register_user(
     return user
 
 
-def load_user_by_id(user_id: UserId) -> User:
-    return __registered_users[user_id]
+def load_user_by_id(user_id: UserId) -> Optional[User]:
+    return __registered_users.get(user_id)
 
 
 def load_current_user() -> Optional[User]:
-    try:
-        identity = get_jwt_identity()
-        user = load_user_by_id(identity)
-        return user
-    except LookupError:
-        return None
+    identity = get_jwt_identity()
+    return load_user_by_id(identity)
 
 
 def save_user(user: User) -> None:
@@ -68,13 +64,27 @@ def generate_credentials(user: User) -> UserCredentials:
 
 def get_user_info_self(cred: UserCredentials) -> UserInfoSelf:
     user = __registered_users[cred.id]
-    return UserInfoSelf(public=UserInfo(
+    return UserInfoSelf(
+        public=get_user_info(user),
+        private=UserInfoSelfPrivate(
+            phone=user.phone,
+            token=cred.token,
+        )
+    )
+
+
+def get_user_info(user: User) -> UserInfo:
+    return UserInfo(
         id=user.id,
         name=user.name,
         age_group=user.age_group.value,
         language=user.language.value,
-        image=user.image
-    ), private=UserInfoSelfPrivate(
-        phone=user.phone,
-        token=cred.token
-    ))
+        image=user.image,
+    )
+
+
+def patch(user: User, body: UserInfo):
+    user.name = body.name
+    user.image = body.image
+    user.language = LanguageSpecEnum(body.language)
+    user.age_group = AgeGroupEnum(body.age_group)

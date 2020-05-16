@@ -7,8 +7,11 @@ from swagger_server.models.language_spec import LanguageSpecEnum
 
 @dataclass
 class User:
+    # persistent properties
     id: UserId
     phone: Phone
+
+    # volatile properties
     name: str
     age_group: AgeGroupEnum
     language: LanguageSpecEnum
