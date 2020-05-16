@@ -17,6 +17,9 @@ __starting_id: int = 0  # last used UserId
 with open('last_id.pickle', 'wb') as f:
     pickle.dump(__starting_id, f, protocol=pickle.HIGHEST_PROTOCOL)
 
+with open('registered_users.pickle', 'wb') as f:
+    pickle.dump("", f, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 def generate_new_user_id() -> UserId:
     with open('last_id.pickle', 'rb') as f:
