@@ -11,7 +11,6 @@ from swagger_server.models.user_info_response import UserInfoResponse  # noqa: E
 from swagger_server import util
 from swagger_server.repository.auth import UserCredentials
 from swagger_server.service import facebook
-from swagger_server import app
 
 
 @jwt_required

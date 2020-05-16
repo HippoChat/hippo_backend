@@ -1,5 +1,6 @@
 flask == 1.1.2
-connexion == 2.7.0
+connexion[swagger-ui] == 2.7.0
 python_dateutil == 2.6.0
 setuptools >= 46.3.1
 Flask-JWT-Extended == 3.24.1
+flask-socketio == 4.3.0
