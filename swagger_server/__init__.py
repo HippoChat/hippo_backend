@@ -57,3 +57,6 @@ import swagger_server.socket
 @app.route('/session')
 def hello_world():
     return app.send_static_file("session.html")
+
+
+from swagger_server.service import heart
