@@ -12,21 +12,17 @@ from swagger_server.repository.user import User
 from typing import Dict, Optional
 import pickle
 
-__registered_users: Dict[UserId, User] = {}
-__last_id: int = 0  # last used UserId
+__starting_id: int = 0  # last used UserId
 
 with open('last_id.pickle', 'wb') as f:
-    pickle.dump(__last_id, f, protocol=pickle.HIGHEST_PROTOCOL)
-    f.close()
+    pickle.dump(__starting_id, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def generate_new_user_id() -> UserId:
     with open('last_id.pickle', 'rb') as f:
         new_id = int(pickle.load(f)) + 1
-        f.close()
     with open('last_id.pickle', 'wb') as f:
         pickle.dump(new_id, f, protocol=pickle.HIGHEST_PROTOCOL)
-        f.close()
     return UserId(new_id)
 
 
@@ -55,7 +51,6 @@ def register_user(
 def load_user_by_id(user_id: UserId) -> Optional[User]:
     with open('registered_users.pickle', 'rb') as f:
         __reg_users = pickle.load(f)
-        f.close()
     return __reg_users.get(user_id)
 
 
@@ -65,10 +60,11 @@ def load_current_user() -> Optional[User]:
 
 
 def save_user(user: User) -> None:
-    __registered_users[user.id] = user
+    with open('registered_users.pickle', 'rb') as f:
+        _user_list = pickle.load(f)
+    _user_list[user.id] = user
     with open('registered_users.pickle', 'wb') as f:
-        pickle.dump(__registered_users, f, protocol=pickle.HIGHEST_PROTOCOL)
-        f.close()
+        pickle.dump(_user_list, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def generate_credentials(user: User) -> UserCredentials:
