@@ -6,13 +6,13 @@ from swagger_server.models.user_id import UserId  # noqa: E501
 from swagger_server import util
 
 
-def user_add_bookmark():  # noqa: E501
+def user_add_bookmark(id_):  # noqa: E501
     """user_add_bookmark
 
     Adds a dialog with a given user to the current user’s bookmarks list. # noqa: E501
 
-    :param id: ID of a user
-    :type id: int
+    :param id_: ID of a user
+    :type id_: int
 
     :rtype: ResponseBase
     """
@@ -30,13 +30,13 @@ def user_get_bookmarks():  # noqa: E501
     return 'do some magic!'
 
 
-def user_remove_bookmark(id):  # noqa: E501
+def user_remove_bookmark(id_):  # noqa: E501
     """user_remove_bookmark
 
     Removes a dialog with a given user from the current user&#x27;s bookmarks list. # noqa: E501
 
-    :param id: ID of a user
-    :type id: dict | bytes
+    :param id_: ID of a user
+    :type id_: int
 
     :rtype: ResponseBase
     """
